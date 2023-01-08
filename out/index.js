@@ -43,9 +43,16 @@ const client = new discord_js_1.Client({
     allowedMentions: { repliedUser: false, parse: ["everyone", "roles", "users"] },
 });
 client.login(process.env.TOKEN);
-client.once("ready", () => {
+client.once("ready", async () => {
     console.log(`Ready as ${client.user.tag}`);
     client.user.setActivity({ name: "Nimbatus", type: discord_js_1.ActivityType.Playing });
+    // const application = await client.application.fetch();
+    // const command: ApplicationCommandData = {
+    //   name: "Preview drone",
+    //   type: ApplicationCommandType.Message,
+    //   dmPermission: false,
+    // };
+    // await application.commands.create(command);
 });
 client.on("messageCreate", async (message) => {
     if (message.channel.type === discord_js_1.ChannelType.DM)
@@ -66,7 +73,13 @@ client.on("messageCreate", async (message) => {
         // @ts-ignore
         const droneZip = node_stream_1.Readable.fromWeb(response.body);
         const imageStream = (0, node_fs_1.createWriteStream)("Image.png"), droneStream = (0, node_fs_1.createWriteStream)("DroneData");
-        droneZip.pipe(unzip_stream_1.default.Parse()).on("entry", (entry) => {
+        const unzipParser = unzip_stream_1.default.Parse();
+        unzipParser.once("error", (err) => {
+            droneZip.destroy(new Error("bruh emoji"));
+            imageStream.destroy();
+            droneStream.destroy();
+        });
+        droneZip.pipe(unzipParser).on("entry", (entry) => {
             if (entry.type !== "File")
                 return;
             switch (entry.path) {
@@ -83,7 +96,7 @@ client.on("messageCreate", async (message) => {
         await Promise.all([(0, node_events_1.once)(imageStream, "close"), (0, node_events_1.once)(droneStream, "close"), (0, node_events_1.once)(droneZip, "end")]);
         const data = (await (0, promises_1.readFile)((0, path_1.join)(__dirname, "../DroneData"), "utf-8")).toString();
         const json = (await parser.parseStringPromise(data)).DroneData;
-        const name = json.DroneName?.[0] ?? "Unnamed drone", description = json.Description?.[0], parts = json.NumberOfParts?.[0] ?? "0", weapons = json.NumberOfweapons?.[0] ?? "0", diameter = parseFloat(json.Diameter?.[0] ?? "0"), version = json.Version?.[0] ?? "huh", lastEdit = json.LastEditTime?.[0] ? new Date(json?.LastEditTime?.[0]) : null;
+        const name = json.DroneName?.[0] ?? "Unnamed drone", description = json.Description?.[0], parts = json.NumberOfParts?.[0] ?? "0", weapons = json.NumberOfWeapons?.[0] ?? "0", diameter = parseFloat(json.Diameter?.[0] ?? "0"), version = json.Version?.[0] ?? "huh", lastEdit = json.LastEditTime?.[0] ? new Date(json?.LastEditTime?.[0]) : null;
         const embed = new discord_js_1.EmbedBuilder()
             .setTitle(name)
             .setColor(0xe0963c)
@@ -99,9 +112,77 @@ client.on("messageCreate", async (message) => {
         const attachment = new discord_js_1.AttachmentBuilder((0, path_1.join)(__dirname, "../Image.png"), { name: "Image.png" });
         message.reply({ embeds: [embed], files: [attachment] });
     }
-    catch (e) {
-        console.error(e);
-        message.reply("error, couldn't preview drone, sorry").catch(() => { });
+    catch (err) {
+        //console.error(err)
+        message.reply("nah bruh are you sure that's a real `.drn` file 💀").catch(() => { });
+    }
+});
+client.on("interactionCreate", async (interaction) => {
+    if (!interaction.isMessageContextMenuCommand())
+        return;
+    if (interaction.commandName !== "Preview drone")
+        return;
+    const message = await interaction.channel.messages.fetch(interaction.targetId);
+    if (!message)
+        return interaction.reply({ content: "uhh error, idk why", ephemeral: true });
+    if (!message.channel.permissionsFor(message.guild.members.me).has(discord_js_1.PermissionFlagsBits.SendMessages))
+        return;
+    if (message.guild.members.me.isCommunicationDisabled())
+        return;
+    try {
+        if (!message.attachments.size)
+            return interaction.reply({ content: "That message has no attachments!", ephemeral: true });
+        const drn = message.attachments.first();
+        if (!drn.name.trim().toLowerCase().endsWith(".drn"))
+            return interaction.reply({ content: "That message has no `.drn` files!", ephemeral: true });
+        const response = await fetch(drn.url);
+        // @ts-ignore
+        const droneZip = node_stream_1.Readable.fromWeb(response.body);
+        const imageStream = (0, node_fs_1.createWriteStream)("Image.png"), droneStream = (0, node_fs_1.createWriteStream)("DroneData");
+        const unzipParser = unzip_stream_1.default.Parse();
+        unzipParser.once("error", (err) => {
+            droneZip.destroy(new Error("bruh emoji"));
+            imageStream.destroy();
+            droneStream.destroy();
+        });
+        droneZip.pipe(unzipParser).on("entry", (entry) => {
+            if (entry.type !== "File")
+                return;
+            switch (entry.path) {
+                case "Image.png":
+                    entry.pipe(imageStream);
+                    break;
+                case "DroneData":
+                    entry.pipe(droneStream);
+                    break;
+                default:
+                    entry.autodrain();
+            }
+        });
+        await Promise.all([(0, node_events_1.once)(imageStream, "close"), (0, node_events_1.once)(droneStream, "close"), (0, node_events_1.once)(droneZip, "end")]);
+        const data = (await (0, promises_1.readFile)((0, path_1.join)(__dirname, "../DroneData"), "utf-8")).toString();
+        const json = (await parser.parseStringPromise(data)).DroneData;
+        const name = json.DroneName?.[0] ?? "Unnamed drone", description = json.Description?.[0], parts = json.NumberOfParts?.[0] ?? "0", weapons = json.NumberOfWeapons?.[0] ?? "0", diameter = parseFloat(json.Diameter?.[0] ?? "0"), version = json.Version?.[0] ?? "huh", lastEdit = json.LastEditTime?.[0] ? new Date(json?.LastEditTime?.[0]) : null;
+        const embed = new discord_js_1.EmbedBuilder()
+            .setTitle(name)
+            .setColor(0xe0963c)
+            .setAuthor({
+            name: "made by " + message.member.displayName,
+            iconURL: message.member.displayAvatarURL(),
+        })
+            .setDescription((description ? `"${description}"\n` : "") +
+            `\`${parts}\` parts, \`${weapons}\` weapons, diameter of \`${diameter.toFixed(2)}\``)
+            .setImage("attachment://Image.png")
+            .setFooter({ text: `v${version}, last edited:` })
+            .setTimestamp(lastEdit);
+        const attachment = new discord_js_1.AttachmentBuilder((0, path_1.join)(__dirname, "../Image.png"), { name: "Image.png" });
+        interaction.reply({ embeds: [embed], files: [attachment] });
+    }
+    catch (err) {
+        //console.error(err)
+        interaction
+            .reply({ content: "nah bruh are you sure that's a real `.drn` file 💀", ephemeral: true })
+            .catch(() => { });
     }
 });
 //# sourceMappingURL=index.js.map
