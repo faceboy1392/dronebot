@@ -1,0 +1,28 @@
+{
+  "name": "dronebot",
+  "version": "1.0.0",
+  "description": "for nimbatus",
+  "main": "out/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc && node ."
+  },
+  "author": "faceboy#1392",
+  "license": "ISC",
+  "dependencies": {
+    "@types/request": "^2.48.8",
+    "@types/unzip": "^0.1.1",
+    "@types/unzip-stream": "^0.3.1",
+    "@types/unzipper": "^0.10.5",
+    "@types/xml2js": "^0.4.11",
+    "@xmldom/xmldom": "^0.8.6",
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3",
+    "path": "^0.12.7",
+    "request": "^2.88.2",
+    "unzip": "^0.1.11",
+    "unzip-stream": "^0.3.1",
+    "unzipper": "^0.10.11",
+    "xml2js": "^0.4.23"
+  }
+}
