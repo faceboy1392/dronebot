@@ -37,11 +37,13 @@ client.once("ready", async () => {
   client.user.setActivity({ name: "Nimbatus", type: ActivityType.Playing });
   // const application = await client.application.fetch();
   // const command: ApplicationCommandData = {
-  //   name: "Preview drone",
-  //   type: ApplicationCommandType.Message,
+  //   name: "ping",
+  //   description: "Test if I'm online.",
+  //   type: ApplicationCommandType.ChatInput,
   //   dmPermission: false,
   // };
   // await application.commands.create(command);
+  // console.log("added command");
 });
 
 client.on("messageCreate", async (message): Promise<any> => {
@@ -123,86 +125,88 @@ client.on("messageCreate", async (message): Promise<any> => {
 });
 
 client.on("interactionCreate", async (interaction): Promise<any> => {
-  if (!interaction.isMessageContextMenuCommand()) return;
-  if (interaction.commandName !== "Preview drone") return;
+  if (!interaction.isCommand()) return;
+  if (interaction.commandName === "ping") {
+    return interaction.reply(`(${interaction.client.ws.ping}ms ping)\n*Pong!*`);
+  } else if (interaction.commandName === "Preview drone" && interaction.isMessageContextMenuCommand()) {
+    const message = await interaction.channel.messages.fetch(interaction.targetId);
+    if (!message) return interaction.reply({ content: "uhh error, idk why", ephemeral: true });
 
-  const message = await interaction.channel.messages.fetch(interaction.targetId);
-  if (!message) return interaction.reply({ content: "uhh error, idk why", ephemeral: true });
+    if (!message.channel.permissionsFor(message.guild.members.me).has(PermissionFlagsBits.SendMessages)) return;
+    if (message.guild.members.me.isCommunicationDisabled()) return;
 
-  if (!message.channel.permissionsFor(message.guild.members.me).has(PermissionFlagsBits.SendMessages)) return;
-  if (message.guild.members.me.isCommunicationDisabled()) return;
+    try {
+      if (!message.attachments.size)
+        return interaction.reply({ content: "That message has no attachments!", ephemeral: true });
 
-  try {
-    if (!message.attachments.size)
-      return interaction.reply({ content: "That message has no attachments!", ephemeral: true });
+      const drn = message.attachments.first();
+      if (!drn.name.trim().toLowerCase().endsWith(".drn"))
+        return interaction.reply({ content: "That message has no `.drn` files!", ephemeral: true });
 
-    const drn = message.attachments.first();
-    if (!drn.name.trim().toLowerCase().endsWith(".drn"))
-      return interaction.reply({ content: "That message has no `.drn` files!", ephemeral: true });
+      const response = await fetch(drn.url);
 
-    const response = await fetch(drn.url);
+      // @ts-ignore
+      const droneZip = Readable.fromWeb(response.body);
+      const imageStream = createWriteStream("Image.png"),
+        droneStream = createWriteStream("DroneData");
 
-    // @ts-ignore
-    const droneZip = Readable.fromWeb(response.body);
-    const imageStream = createWriteStream("Image.png"),
-      droneStream = createWriteStream("DroneData");
+      const unzipParser = unzip.Parse();
+      unzipParser.once("error", (err) => {
+        droneZip.destroy(new Error("bruh emoji"));
+        imageStream.destroy();
+        droneStream.destroy();
+      });
 
-    const unzipParser = unzip.Parse();
-    unzipParser.once("error", (err) => {
-      droneZip.destroy(new Error("bruh emoji"));
-      imageStream.destroy();
-      droneStream.destroy();
-    });
+      droneZip.pipe(unzipParser).on("entry", (entry) => {
+        if (entry.type !== "File") return;
 
-    droneZip.pipe(unzipParser).on("entry", (entry) => {
-      if (entry.type !== "File") return;
+        switch (entry.path) {
+          case "Image.png":
+            entry.pipe(imageStream);
+            break;
+          case "DroneData":
+            entry.pipe(droneStream);
+            break;
+          default:
+            entry.autodrain();
+        }
+      });
 
-      switch (entry.path) {
-        case "Image.png":
-          entry.pipe(imageStream);
-          break;
-        case "DroneData":
-          entry.pipe(droneStream);
-          break;
-        default:
-          entry.autodrain();
-      }
-    });
+      await Promise.all([once(imageStream, "close"), once(droneStream, "close"), once(droneZip, "end")]);
 
-    await Promise.all([once(imageStream, "close"), once(droneStream, "close"), once(droneZip, "end")]);
+      const data = (await readFile(join(__dirname, "../DroneData"), "utf-8")).toString();
+      const json = (await parser.parseStringPromise(data)).DroneData;
 
-    const data = (await readFile(join(__dirname, "../DroneData"), "utf-8")).toString();
-    const json = (await parser.parseStringPromise(data)).DroneData;
+      const name = json.DroneName?.[0] ?? "Unnamed drone",
+        description = json.Description?.[0],
+        parts = json.NumberOfParts?.[0] ?? "0",
+        weapons = json.NumberOfWeapons?.[0] ?? "0",
+        diameter = parseFloat(json.Diameter?.[0] ?? "0"),
+        version = json.Version?.[0] ?? "huh",
+        lastEdit = json.LastEditTime?.[0] ? new Date(json?.LastEditTime?.[0]) : null;
 
-    const name = json.DroneName?.[0] ?? "Unnamed drone",
-      description = json.Description?.[0],
-      parts = json.NumberOfParts?.[0] ?? "0",
-      weapons = json.NumberOfWeapons?.[0] ?? "0",
-      diameter = parseFloat(json.Diameter?.[0] ?? "0"),
-      version = json.Version?.[0] ?? "huh",
-      lastEdit = json.LastEditTime?.[0] ? new Date(json?.LastEditTime?.[0]) : null;
+      const embed = new EmbedBuilder()
+        .setTitle(name)
+        .setColor(0xe0963c)
+        .setAuthor({
+          name: "made by " + message.member.displayName,
+          iconURL: message.member.displayAvatarURL(),
+        })
+        .setDescription(
+          (description ? `"${description}"\n` : "") +
+            `\`${parts}\` parts, \`${weapons}\` weapons, diameter of \`${diameter.toFixed(2)}\``
+        )
+        .setImage("attachment://Image.png")
+        .setFooter({ text: `v${version}, last edited:` })
+        .setTimestamp(lastEdit);
+      const attachment = new AttachmentBuilder(join(__dirname, "../Image.png"), { name: "Image.png" });
 
-    const embed = new EmbedBuilder()
-      .setTitle(name)
-      .setColor(0xe0963c)
-      .setAuthor({
-        name: "made by " + message.member.displayName,
-        iconURL: message.member.displayAvatarURL(),
-      })
-      .setDescription(
-        (description ? `"${description}"\n` : "") +
-          `\`${parts}\` parts, \`${weapons}\` weapons, diameter of \`${diameter.toFixed(2)}\``
-      )
-      .setImage("attachment://Image.png")
-      .setFooter({ text: `v${version}, last edited:` })
-      .setTimestamp(lastEdit);
-    const attachment = new AttachmentBuilder(join(__dirname, "../Image.png"), { name: "Image.png" });
-
-    await interaction.reply({ embeds: [embed], files: [attachment] });
-  } catch (err) {
-    //console.error(err)
-    interaction
-      .reply({ content: "nah bruh are you sure that's a real `.drn` file 💀", ephemeral: true })
-      .catch(() => {});
+      await interaction.reply({ embeds: [embed], files: [attachment] });
+    } catch (err) {
+      //console.error(err)
+      interaction
+        .reply({ content: "nah bruh are you sure that's a real `.drn` file 💀", ephemeral: true })
+        .catch(() => {});
+    }
   }
 });
