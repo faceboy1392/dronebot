@@ -115,7 +115,7 @@ client.on("messageCreate", async (message): Promise<any> => {
       .setTimestamp(lastEdit);
     const attachment = new AttachmentBuilder(join(__dirname, "../Image.png"), { name: "Image.png" });
 
-    message.reply({ embeds: [embed], files: [attachment] });
+    await message.reply({ embeds: [embed], files: [attachment] });
   } catch (err) {
     //console.error(err)
     message.reply("nah bruh are you sure that's a real `.drn` file 💀").catch(() => {});
@@ -198,7 +198,7 @@ client.on("interactionCreate", async (interaction): Promise<any> => {
       .setTimestamp(lastEdit);
     const attachment = new AttachmentBuilder(join(__dirname, "../Image.png"), { name: "Image.png" });
 
-    interaction.reply({ embeds: [embed], files: [attachment] });
+    await interaction.reply({ embeds: [embed], files: [attachment] });
   } catch (err) {
     //console.error(err)
     interaction
