@@ -35,5 +35,4 @@ To host it yourself:
 1. Download [NodeJS](https://nodejs.org/en/)
 1. Download the source code for this repo
 1. Open a terminal like cmd or Bash, and move to the folder you downloaded the code into
-1. Type `npm run build` and hit enter
 1. Type `npm run start` and hit enter
