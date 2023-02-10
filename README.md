@@ -33,6 +33,15 @@ The bot is fully available, but if for whatever reason it becomes unavailable, y
 
 To host it yourself:
 1. Download [NodeJS](https://nodejs.org/en/)
-1. Download the source code for this repo
-1. Open a terminal like cmd or Bash, and move to the folder you downloaded the code into
+1. Download the source code in this repo and put it all in a folder
+1. Create a Discord bot application
+> Navigate to the Discord Developer Portal, and create a new Application
+> In the application, fill out the information it asks for, then create and customize the actual bot under the `Bot` tab
+> Copy the bot's token. Do not give this token out to anyone.
+1. In the source code root folder, *not within `src`*, create a file called `.env`
+1. Open that file and type `TOKEN=` and paste the token you copied previously, nothing else 
+1. Open a terminal like cmd or Bash, and navigate to the folder with the code
+1. Type `npm install` and hit enter, and wait for it to finish installing dependencies
 1. Type `npm run start` and hit enter
+
+To add the custom bot to a server, just follow [this guide](https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links). It is part of a guide for Discord.js, a library used for creating Discord bots (including this one), but that specific page is relevant to Discord in general.
