@@ -7,7 +7,6 @@ import { IntentsBitField as Intents, Partials } from "discord.js";
 import Bot from "./classes/Bot";
 import { Command } from "./classes/Command";
 import { Event } from "./classes/Event";
-import logger from "./util/logger";
 import glob from "glob";
 import path from "path";
 
@@ -26,7 +25,7 @@ glob("./commands/*.js", { cwd: __dirname }, async (err, files) => {
   for (const file of files) {
     const command: Command = (await import(path.join(__dirname, file))).default;
     if (!("data" in command) || !("Impl" in command) || (!("name" in command) && !file.endsWith(".txt"))) {
-      logger.warn(`Empty/invalid command file: ${file}`);
+      console.warn(`Empty/invalid command file: ${file}`);
       continue;
     }
     bot.commands.set(command.name, command);
@@ -45,11 +44,11 @@ glob("./events/*.js", { cwd: __dirname }, async (err, files) => {
 
     if (event.once) {
       client.once(event.name, (...args: any) => {
-        new event.Impl().execute(bot, ...args).catch((err) => logger.error(err));
+        new event.Impl().execute(bot, ...args).catch((err) => console.error(err));
       });
     } else {
       client.on(event.name, (...args: any) => {
-        new event.Impl().execute(bot, ...args).catch((err) => logger.error(err));
+        new event.Impl().execute(bot, ...args).catch((err) => console.error(err));
       });
     }
   }

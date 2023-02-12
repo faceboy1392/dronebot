@@ -1,7 +1,6 @@
 import { ApplicationCommand, ApplicationCommandData, ApplicationCommandManager, Client, Collection } from "discord.js";
 import { Command } from "../classes/Command";
 import Bot from "../classes/Bot";
-import logger from "./logger";
 
 /**
  * get it? command? handler? commandler? hahaha *what am i doing with my life*
@@ -101,7 +100,7 @@ export default class Commandler {
     let created;
     if (command.data.scope === "global") {
       created = await this.manager.create(command.data.structure);
-      logger.info(`Created App Command: (${created.name})`);
+      console.log(`Created App Command: (${created.name})`);
     } else {
       const guild = this.client.guilds.cache.get(command.data.guildId);
       if (!guild) return null; // doesn't throw an error because sharding could mean it is not in the guild
@@ -111,7 +110,7 @@ export default class Commandler {
       if (existing) return existing;
 
       created = await guild.commands.create(command.data.structure);
-      logger.info(`Created App Command: (${created.name}) in guild: (${guild.id})`);
+      console.log(`Created App Command: (${created.name}) in guild: (${guild.id})`);
     }
 
     this.reload();
@@ -130,7 +129,7 @@ export default class Commandler {
       if (!existing) return null;
 
       updated = await this.manager.edit(existing, command.data.structure);
-      logger.info(`Updated App Command: (${command.name})`);
+      console.log(`Updated App Command: (${command.name})`);
     } else {
       const guild = this.client.guilds.cache.get(command.data.guildId);
       if (!guild) return null; // doesn't throw an error because sharding could mean it is not in the guild
@@ -140,7 +139,7 @@ export default class Commandler {
       if (!existing) return null;
 
       updated = await guild.commands.edit(existing, command.data.structure);
-      logger.info(`Updated App Command: (${command.name}) in guild: (${guild.id})`);
+      console.log(`Updated App Command: (${command.name}) in guild: (${guild.id})`);
     }
 
     this.reload();
@@ -158,7 +157,7 @@ export default class Commandler {
       if (!existing) return false;
 
       await this.manager.delete(existing);
-      logger.info(`Deleted App Command: (${command.name})`);
+      console.log(`Deleted App Command: (${command.name})`);
     } else {
       const guild = this.client.guilds.cache.get(command.data.guildId);
       if (!guild) return null; // doesn't throw an error because sharding could mean it is not in the guild
@@ -168,7 +167,7 @@ export default class Commandler {
       if (!existing) return false;
 
       await guild.commands.delete(existing);
-      logger.info(`Deleted App Command: (${command.name}) in guild: (${guild.id})`);
+      console.log(`Deleted App Command: (${command.name}) in guild: (${guild.id})`);
     }
 
     this.reload();
@@ -183,13 +182,13 @@ export default class Commandler {
   async deleteNonexistent(appcmd: ApplicationCommand): Promise<boolean> {
     if (!appcmd.guildId) {
       await this.manager.delete(appcmd);
-      logger.info(`Deleted App Command: (${appcmd.name})`);
+      console.log(`Deleted App Command: (${appcmd.name})`);
     } else {
       const guild = this.client.guilds.cache.get(appcmd.guildId);
       if (!guild) return false;
 
       guild.commands.delete(appcmd);
-      logger.info(`Deleted App Command: (${appcmd.name}) in guild: (${guild.id})`);
+      console.log(`Deleted App Command: (${appcmd.name}) in guild: (${guild.id})`);
     }
 
     return true;

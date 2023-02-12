@@ -1,6 +1,5 @@
 import { EventData, EventExecutable } from "../classes/Event";
 import Bot from "../classes/Bot";
-import logger from "../util/logger";
 
 import { AttachmentBuilder, ChannelType, EmbedBuilder, PermissionFlagsBits, Message } from "discord.js";
 
