@@ -15,6 +15,8 @@ class Impl extends EventExecutable {
     logger.info(`Guilds: ${client.guilds.cache.size}`);
 
     client.user.setActivity({ name: "Nimbatus", type: ActivityType.Playing, url: "https://i.imgur.com/g8YLdP0.png" });
+    
+    client.guilds.cache.get("369851421719527425").members.me.setNickname("robo L")
 
     const commandler = new Commandler(bot);
     bot.commandler = commandler;

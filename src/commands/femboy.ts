@@ -5,11 +5,12 @@ import ms from "ms";
 // Static data about the command
 const data: CommandData = {
   structure: {
-    name: "ping",
-    description: "Useful to test if I'm online.",
+    name: "femboy",
+    description: "for robo",
     type: CommandType.ChatInput,
   },
-  scope: "global",
+  scope: "guild",
+  guildId: "384749838928969728",
   perms: {
     bot: [],
   },
@@ -18,7 +19,7 @@ const data: CommandData = {
 // New instance of implementation made each time the command is used
 class Impl extends Executable {
   async execute(bot: Bot, interaction: ChatInput) {
-    interaction.reply(`\`(${interaction.client.ws.ping}ms latency, online for ${ms(bot.client.uptime)})\`\n*Pong!*`);
+    interaction.reply("fembozo");
   }
 }
 
