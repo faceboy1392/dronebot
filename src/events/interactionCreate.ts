@@ -1,7 +1,6 @@
 import { EventData, EventExecutable } from "../classes/Event";
 import Bot from "../classes/Bot";
 import { CommandInteraction } from "discord.js";
-import logger from "../util/logger";
 
 const data: EventData = {
   name: "interactionCreate",
@@ -30,7 +29,7 @@ class Impl extends EventExecutable {
     }
 
     new command.Impl().execute(bot, interaction).catch((err) => {
-      logger.error(err);
+      console.error(err);
       interaction
         .reply({
           content:
