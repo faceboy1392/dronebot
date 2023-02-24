@@ -30,9 +30,6 @@ class Impl extends Executable {
     const message = await interaction.channel.messages.fetch(interaction.targetId);
     if (!message) return interaction.reply({ content: "uhh error, idk why", ephemeral: true });
 
-    if (!message.channel.permissionsFor(message.guild.members.me).has(PermissionFlagsBits.SendMessages)) return;
-    if (message.guild.members.me.isCommunicationDisabled()) return;
-
     try {
       if (!message.attachments.size)
         return interaction.reply({ content: "That message has no attachments!", ephemeral: true });

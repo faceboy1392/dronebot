@@ -18,9 +18,20 @@ const data: EventData = {
   once: false,
 };
 
+let debug = false;
+
 class Impl extends EventExecutable {
   async execute(bot: Bot, message: Message) {
     if (message.channel.type === ChannelType.DM) return message.reply("im busy go away");
+
+    if (
+      message.author.id === "718930767740403753" &&
+      message.mentions.users.has(message.client.user.id) &&
+      message.content.trim().toLowerCase() === "debug"
+    ) {
+      debug = !debug;
+      return message.reply(`debug: ${debug}`);
+    }
 
     if (!message.channel.permissionsFor(message.guild.members.me).has(PermissionFlagsBits.SendMessages)) return;
     if (message.guild.members.me.isCommunicationDisabled()) return;
@@ -92,7 +103,7 @@ class Impl extends EventExecutable {
 
       await message.reply({ embeds: [embed], files: [attachment] });
     } catch (err) {
-      console.error(err)
+      console.error(err);
       message.reply("nah bruh are you sure that's a real `.drn` file 💀").catch(() => {});
     }
   }
