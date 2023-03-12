@@ -27,16 +27,18 @@ const data: CommandData = {
 // New instance of implementation made each time the command is used
 class Impl extends Executable {
   async execute(bot: Bot, interaction: MessageContext) {
+    await interaction.deferReply();
+
     const message = await interaction.channel.messages.fetch(interaction.targetId);
-    if (!message) return interaction.reply({ content: "uhh error, idk why", ephemeral: true });
+    if (!message) return interaction.followUp({ content: "uhh error, idk why", ephemeral: true });
 
     try {
       if (!message.attachments.size)
-        return interaction.reply({ content: "That message has no attachments!", ephemeral: true });
+        return interaction.followUp({ content: "That message has no attachments!", ephemeral: true });
 
       const drn = message.attachments.first();
       if (!drn.name.trim().toLowerCase().endsWith(".drn"))
-        return interaction.reply({ content: "That message has no `.drn` files!", ephemeral: true });
+        return interaction.followUp({ content: "That message has no `.drn` files!", ephemeral: true });
 
       const response = await fetch(drn.url);
 
@@ -84,8 +86,8 @@ class Impl extends Executable {
         .setTitle(name)
         .setColor(0xe0963c)
         .setAuthor({
-          name: "made by " + message.member.displayName,
-          iconURL: message.member.displayAvatarURL(),
+          name: "made by " + message.member?.displayName || message.author.username,
+          iconURL: message.member?.displayAvatarURL() || undefined,
         })
         .setDescription(
           (description ? `"${description}"\n` : "") +
@@ -96,12 +98,12 @@ class Impl extends Executable {
         .setTimestamp(lastEdit);
       const attachment = new AttachmentBuilder("Image.png", { name: "Image.png" });
 
-      await interaction.reply({ embeds: [embed], files: [attachment] });
+      await interaction.followUp({ embeds: [embed], files: [attachment], ephemeral: !interaction.channel.permissionsFor(interaction.user).has("SendMessages") });
     } catch (err) {
       console.error(err)
       interaction
-        .reply({ content: "nah bruh are you sure that's a real `.drn` file 💀", ephemeral: true })
-        .catch(() => {});
+        .followUp({ content: "nah bruh are you sure that's a real `.drn` file 💀", ephemeral: true })
+        .catch((e) => { console.error(e) });
     }
   }
 }

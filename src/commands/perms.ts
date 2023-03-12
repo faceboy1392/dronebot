@@ -16,8 +16,7 @@ const data: CommandData = {
         required: true,
       },
     ],
-    dmPermission: false,
-    defaultMemberPermissions: "ManageRoles",
+    dmPermission: false
   },
   scope: "guild",
   guildId: "369851421719527425",

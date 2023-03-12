@@ -24,15 +24,6 @@ class Impl extends EventExecutable {
   async execute(bot: Bot, message: Message) {
     if (message.channel.type === ChannelType.DM) return message.reply("im busy go away");
 
-    if (
-      message.author.id === "718930767740403753" &&
-      message.mentions.users.has(message.client.user.id) &&
-      message.content.trim().toLowerCase() === "debug"
-    ) {
-      debug = !debug;
-      return message.reply(`debug: ${debug}`);
-    }
-
     if (!message.channel.permissionsFor(message.guild.members.me).has(PermissionFlagsBits.SendMessages)) return;
     if (message.guild.members.me.isCommunicationDisabled()) return;
 
@@ -42,6 +33,8 @@ class Impl extends EventExecutable {
 
       const drn = message.attachments.first();
       if (!drn.name.trim().toLowerCase().endsWith(".drn")) return;
+
+      if (debug) console.log("a")
 
       const response = await fetch(drn.url);
 
@@ -57,22 +50,41 @@ class Impl extends EventExecutable {
         droneStream.destroy();
       });
 
+      if (debug) console.log("b")
+
+      let gotImage = false;
+      let gotData = false;
+
       droneZip.pipe(unzipParser).on("entry", (entry) => {
         if (entry.type !== "File") return;
 
         switch (entry.path) {
           case "Image.png":
             entry.pipe(imageStream);
+            gotImage = true;
             break;
           case "DroneData":
             entry.pipe(droneStream);
+            gotData = true;
             break;
           default:
             entry.autodrain();
         }
       });
 
+      if (!(gotImage && gotData)) return;
+
+      if (debug) console.log("c")
+
+      if (debug) {
+        once(imageStream, "close").then(() => { console.log("img closed")})
+        once(droneStream, "close").then(() => { console.log("data closed")})
+        once(droneZip, "end").then(() => { console.log("zip done")})
+      }
+
       await Promise.all([once(imageStream, "close"), once(droneStream, "close"), once(droneZip, "end")]);
+
+      if (debug) console.log("d")
 
       const data = (await readFile("DroneData", "utf-8")).toString();
       const json = (await parser.parseStringPromise(data)).DroneData;
@@ -89,8 +101,8 @@ class Impl extends EventExecutable {
         .setTitle(name)
         .setColor(0xe0963c)
         .setAuthor({
-          name: "made by " + message.member.displayName,
-          iconURL: message.member.displayAvatarURL(),
+          name: "made by " + message.member?.displayName || message.author.username,
+          iconURL: message.member?.displayAvatarURL() || undefined,
         })
         .setDescription(
           (description ? `"${description}"\n` : "") +
@@ -100,6 +112,8 @@ class Impl extends EventExecutable {
         .setFooter({ text: `v${version}, last edited:` })
         .setTimestamp(lastEdit);
       const attachment = new AttachmentBuilder("Image.png", { name: "Image.png" });
+
+      if (debug) console.log("e")
 
       await message.reply({ embeds: [embed], files: [attachment] });
     } catch (err) {
