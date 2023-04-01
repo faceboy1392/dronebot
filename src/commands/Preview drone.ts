@@ -40,6 +40,8 @@ class Impl extends Executable {
       if (!drn.name.trim().toLowerCase().endsWith(".drn"))
         return interaction.followUp({ content: "That message has no `.drn` files!", ephemeral: true });
 
+        const member = await message.guild.members.fetch(message.author);
+
       const response = await fetch(drn.url);
 
       // @ts-ignore
@@ -86,8 +88,8 @@ class Impl extends Executable {
         .setTitle(name)
         .setColor(0xe0963c)
         .setAuthor({
-          name: "made by " + message.member?.displayName || message.author.username,
-          iconURL: message.member?.displayAvatarURL() || undefined,
+          name: "made by " + member?.displayName || member.user.username,
+          iconURL: member?.displayAvatarURL() || undefined,
         })
         .setDescription(
           (description ? `"${description}"\n` : "") +

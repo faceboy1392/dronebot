@@ -31,11 +31,14 @@ class Impl extends EventExecutable {
       if (message.author.bot) return;
       if (!message.attachments.size) return;
 
+      
       const drn = message.attachments.first();
       if (!drn.name.trim().toLowerCase().endsWith(".drn")) return;
-
+      
       if (debug) console.log("a")
-
+      
+      const member = await message.guild.members.fetch(message.author);
+      
       const response = await fetch(drn.url);
 
       // @ts-ignore
@@ -101,8 +104,8 @@ class Impl extends EventExecutable {
         .setTitle(name)
         .setColor(0xe0963c)
         .setAuthor({
-          name: "made by " + message.member?.displayName || message.author.username,
-          iconURL: message.member?.displayAvatarURL() || undefined,
+          name: "made by " + member.nickname || member.user.username,
+          iconURL: member?.displayAvatarURL() || undefined,
         })
         .setDescription(
           (description ? `"${description}"\n` : "") +
