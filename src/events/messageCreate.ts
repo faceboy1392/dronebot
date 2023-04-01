@@ -18,7 +18,7 @@ const data: EventData = {
   once: false,
 };
 
-let debug = false;
+let debug = true;
 
 class Impl extends EventExecutable {
   async execute(bot: Bot, message: Message) {
@@ -31,14 +31,15 @@ class Impl extends EventExecutable {
       if (message.author.bot) return;
       if (!message.attachments.size) return;
 
-      
+      if (debug) console.log("_");
+
       const drn = message.attachments.first();
       if (!drn.name.trim().toLowerCase().endsWith(".drn")) return;
-      
-      if (debug) console.log("a")
-      
+
+      if (debug) console.log("a");
+
       const member = await message.guild.members.fetch(message.author);
-      
+
       const response = await fetch(drn.url);
 
       // @ts-ignore
@@ -53,7 +54,7 @@ class Impl extends EventExecutable {
         droneStream.destroy();
       });
 
-      if (debug) console.log("b")
+      if (debug) console.log("b");
 
       let gotImage = false;
       let gotData = false;
@@ -75,19 +76,25 @@ class Impl extends EventExecutable {
         }
       });
 
-      if (!(gotImage && gotData)) return;
+      // if (!(gotImage && gotData)) return;
 
-      if (debug) console.log("c")
+      if (debug) console.log("c");
 
       if (debug) {
-        once(imageStream, "close").then(() => { console.log("img closed")})
-        once(droneStream, "close").then(() => { console.log("data closed")})
-        once(droneZip, "end").then(() => { console.log("zip done")})
+        once(imageStream, "close").then(() => {
+          console.log("img closed");
+        });
+        once(droneStream, "close").then(() => {
+          console.log("data closed");
+        });
+        once(droneZip, "end").then(() => {
+          console.log("zip done");
+        });
       }
 
       await Promise.all([once(imageStream, "close"), once(droneStream, "close"), once(droneZip, "end")]);
 
-      if (debug) console.log("d")
+      if (debug) console.log("d");
 
       const data = (await readFile("DroneData", "utf-8")).toString();
       const json = (await parser.parseStringPromise(data)).DroneData;
@@ -116,7 +123,7 @@ class Impl extends EventExecutable {
         .setTimestamp(lastEdit);
       const attachment = new AttachmentBuilder("Image.png", { name: "Image.png" });
 
-      if (debug) console.log("e")
+      if (debug) console.log("e");
 
       await message.reply({ embeds: [embed], files: [attachment] });
     } catch (err) {
