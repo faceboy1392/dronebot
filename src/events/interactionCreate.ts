@@ -1,6 +1,6 @@
 import { EventData, EventExecutable } from "../classes/Event";
 import Bot from "../classes/Bot";
-import { CommandInteraction } from "discord.js";
+import { Interaction } from "discord.js";
 
 const data: EventData = {
   name: "interactionCreate",
@@ -8,7 +8,19 @@ const data: EventData = {
 };
 
 class Impl extends EventExecutable {
-  async execute(bot: Bot, interaction: CommandInteraction) {
+  async execute(bot: Bot, interaction: Interaction) {
+    if (interaction.isButton()) {
+      if (!interaction.customId.startsWith("del_")) return;
+
+      const userId = interaction.customId.split("_")[1];
+      if (interaction.user.id !== userId && !interaction.memberPermissions.has("ManageMessages")) return;
+
+      if (!interaction.message.deletable) return;
+
+      await interaction.message.delete();
+      return interaction.reply({ content: "aight", ephemeral: true });
+    }
+
     if (!interaction.isCommand()) return;
 
     const command = bot.commands.get(interaction.commandName);

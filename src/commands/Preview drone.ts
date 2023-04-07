@@ -1,6 +1,6 @@
 import { CommandData, CommandType, Executable, MessageContext } from "../classes/Command";
 import Bot from "../classes/Bot";
-import { AttachmentBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 
 import unzip from "unzip-stream";
 import { Readable } from "node:stream";
@@ -100,7 +100,17 @@ class Impl extends Executable {
         .setTimestamp(lastEdit);
       const attachment = new AttachmentBuilder("Image.png", { name: "Image.png" });
 
-      await interaction.followUp({ embeds: [embed], files: [attachment], ephemeral: !interaction.channel.permissionsFor(interaction.user).has("SendMessages") });
+      const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+        .setLabel("Remove")
+        .setCustomId(`del_${member.id}`)
+        .setStyle(ButtonStyle.Danger)
+      )
+
+      const canSendMessages = interaction.channel.permissionsFor(interaction.user).has("SendMessages")
+
+      await interaction.followUp({ embeds: [embed], files: [attachment], components: canSendMessages ? [row] : undefined, ephemeral: !canSendMessages });
     } catch (err) {
       console.error(err)
       interaction

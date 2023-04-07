@@ -1,7 +1,16 @@
 import { EventData, EventExecutable } from "../classes/Event";
 import Bot from "../classes/Bot";
 
-import { AttachmentBuilder, ChannelType, EmbedBuilder, PermissionFlagsBits, Message } from "discord.js";
+import {
+  AttachmentBuilder,
+  ChannelType,
+  EmbedBuilder,
+  PermissionFlagsBits,
+  Message,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 
 import unzip from "unzip-stream";
 import { Readable } from "node:stream";
@@ -125,7 +134,14 @@ class Impl extends EventExecutable {
 
       if (debug) console.log("e");
 
-      await message.reply({ embeds: [embed], files: [attachment] });
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setLabel("Remove")
+          .setCustomId(`del_${member.id}`)
+          .setStyle(ButtonStyle.Danger)
+      );
+
+      await message.reply({ embeds: [embed], files: [attachment], components: [row] });
     } catch (err) {
       console.error(err);
       message.reply("nah bruh are you sure that's a real `.drn` file 💀").catch(() => {});
