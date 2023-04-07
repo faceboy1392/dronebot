@@ -18,7 +18,7 @@ const data: EventData = {
   once: false,
 };
 
-let debug = true;
+let debug = false;
 
 class Impl extends EventExecutable {
   async execute(bot: Bot, message: Message) {
