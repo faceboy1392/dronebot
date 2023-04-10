@@ -27,8 +27,8 @@ class Impl extends Executable {
     if (interaction.user.id !== "718930767740403753") return interaction.reply("you arent gindley enough");
     interaction.guild.members.me
       .setNickname(interaction.options.getString("glaba"))
-      .then(() => interaction.reply({ content: "ok", ephemeral: true }))
-      .catch(() => interaction.reply({ content: "fail", ephemeral: true }));
+      .then(() => interaction.reply("ok"))
+      .catch(() => interaction.reply("fail"));
   }
 }
 
