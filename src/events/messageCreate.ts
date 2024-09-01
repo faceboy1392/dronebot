@@ -120,7 +120,7 @@ class Impl extends EventExecutable {
         .setTitle(name)
         .setColor(0xe0963c)
         .setAuthor({
-          name: "made by " + member.nickname || member.user.username,
+          name: "made by " + member.user.displayName,
           iconURL: member?.displayAvatarURL() || undefined,
         })
         .setDescription(
